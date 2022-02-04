@@ -8,8 +8,9 @@
 <h2>@Model.Name</h2>
 <ul>
     <li>Membership Type: @Model.MembershipType.Name</li>
-    @if (Model.Birthdate.HasValue)
-    {
+    @if (Model.Birthdate.HasValue) {
         <li>Birthdate: @Model.Birthdate.Value.ToShortDateString()</li>
-    }   
+    }
+
+    @if (User.Identity.IsAuthenticated) {<a class="btn btn-primary" href="/customers/edit/@Model.Id">Edit User: @Model.Name</a>}
 </ul>

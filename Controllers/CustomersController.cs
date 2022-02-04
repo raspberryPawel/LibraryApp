@@ -61,7 +61,7 @@ namespace LibApp.Controllers
 
             var viewModel = new CustomerFormViewModel(customer)
             {
-                MembershipTypes = _context.MembershipTypes.ToList()
+                MembershipTypes = _context.MembershipTypes.ToList(),
             };
 
             return View("CustomerForm", viewModel);
