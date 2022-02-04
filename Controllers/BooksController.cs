@@ -70,6 +70,9 @@ namespace LibApp.Controllers
             return View("BookForm", viewModel);
         }
 
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Save(Book book)
         {
             if (book.Id == 0)
