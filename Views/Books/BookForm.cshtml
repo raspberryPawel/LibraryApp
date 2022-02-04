@@ -27,16 +27,17 @@
     </div>
     <div class="form-group">
         @Html.LabelFor(m => m.Book.ReleaseDate)
-        @Html.TextBoxFor(m => m.Book.ReleaseDate, new { @class = "form-control" })
+        @Html.TextBoxFor(m => m.Book.ReleaseDate, new { @class = "form-control", @type = "date", })
         @Html.ValidationMessageFor(m => m.Book.ReleaseDate, "", new { @class = "text-danger field-validation-valid" })
     </div>
     <div class="form-group">
         @Html.LabelFor(m => m.Book.NumberInStock)
-        @Html.TextBoxFor(m => m.Book.NumberInStock, new { @class = "form-control" })
+        @Html.TextBoxFor(m => m.Book.NumberInStock, new { @class = "form-control", @type="number", @step=1, min=1, max = 20 })
         @Html.ValidationMessageFor(m => m.Book.NumberInStock, "", new { @class = "text-danger field-validation-valid" })
     </div>
 
     @Html.HiddenFor(m => m.Book.Id);
+    @Html.AntiForgeryToken()
     <button type="submit" class="btn btn-primary">Save</button>
     
     @section scripts

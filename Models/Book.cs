@@ -1,9 +1,10 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Configuration;
 
 namespace LibApp.Models
 {
-    public class Book
+	public class Book
     {
         public int Id { get; set; }
 		[Required(ErrorMessage = "Please enter a book name")]
@@ -25,6 +26,7 @@ namespace LibApp.Models
 		public DateTime ReleaseDate { get; set; }
 		[Required(ErrorMessage = "Please enter number in stock value")]
 		[Display(Name = "Number of books in stock:")]
+		[Range(1, 20, ErrorMessage = "Number must be in range 1-20")]
 		public int NumberInStock { get; set; }
 		public int NumberAvailable { get; set; }
 	}
