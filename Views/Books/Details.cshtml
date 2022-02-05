@@ -1,6 +1,6 @@
 ﻿@model LibApp.Models.Book
 
-@{ 
+@{
     ViewBag.Title = Model.Name;
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
@@ -13,3 +13,7 @@
     <li>Date Added: @Model.DateAdded</li>
     <li>Numbers in Stock: @Model.NumberInStock</li>
 </ul>
+
+@if (User.Identity.IsAuthenticated) {
+    <a class="btn btn-primary" href="/books/edit/@Model.Id">Edit book: @Model.Name</a>
+}

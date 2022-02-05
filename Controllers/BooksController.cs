@@ -72,12 +72,13 @@ namespace LibApp.Controllers
 
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        [ValidateAntiForgeryToken()]
         public IActionResult Save(Book book)
         {
             if (book.Id == 0)
             {
-                book.DateAdded = DateTime.Now;
+                 book.DateAdded = DateTime.Now;
+                book.NumberAvailable = book.NumberInStock;
                 _context.Books.Add(book);
             }
             else

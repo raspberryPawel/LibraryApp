@@ -9,6 +9,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Web.Http;
+using HttpDeleteAttribute = Microsoft.AspNetCore.Mvc.HttpDeleteAttribute;
+using HttpGetAttribute = Microsoft.AspNetCore.Mvc.HttpGetAttribute;
+using RouteAttribute = Microsoft.AspNetCore.Mvc.RouteAttribute;
 
 namespace LibApp.Controllers.Api
 {
@@ -21,10 +25,13 @@ namespace LibApp.Controllers.Api
             _context = context;
             _mapper = mapper;
         }
+
+        // GET /api/books
         [HttpGet]
-        public IEnumerable<BookDto> GetBooks(string query = null) 
+        public IActionResult GetBooks(string query = null) 
         {
             var booksQuery = _context.Books
+                .Include(b => b.Genre)
                 .Where(b => b.NumberAvailable > 0);
 
             if (!String.IsNullOrWhiteSpace(query))
@@ -32,7 +39,25 @@ namespace LibApp.Controllers.Api
                 booksQuery = booksQuery.Where(b => b.Name.Contains(query));
             }
 
-            return booksQuery.ToList().Select(_mapper.Map<Book, BookDto>);
+            var booksDtos = booksQuery
+            .ToList()
+            .Select(_mapper.Map<Book, BookDto>);
+
+            return Ok(booksDtos);
+        }
+
+        // DELETE /api/books
+        [HttpDelete("{id}")]
+        public void DeleteBook(int id)
+        {
+            var bookInDb = _context.Books.SingleOrDefault(c => c.Id == id);
+            if (bookInDb == null)
+            {
+                throw new HttpResponseException(System.Net.HttpStatusCode.NotFound);
+            }
+
+            _context.Books.Remove(bookInDb);
+            _context.SaveChanges();
         }
 
         private readonly ApplicationDbContext _context;
