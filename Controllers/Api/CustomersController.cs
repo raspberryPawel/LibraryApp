@@ -53,8 +53,8 @@ namespace LibApp.Controllers.Api
         {
             Console.WriteLine("Request beginning");
 
-            var customer = await _context.Customers.SingleOrDefaultAsync(c => c.Id == id);
-            await Task.Delay(2000);
+            var customer = await _context.Customers.Include(c => c.MembershipType).SingleOrDefaultAsync(c => c.Id == id);
+            //await Task.Delay(2000);
             if (customer == null)
             {
                 throw new HttpResponseException(System.Net.HttpStatusCode.NotFound);
