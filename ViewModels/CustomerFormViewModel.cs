@@ -1,15 +1,14 @@
-﻿using LibApp.Models;
+﻿using LibApp.Dtos;
+using LibApp.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace LibApp.ViewModels
 {
     public class CustomerFormViewModel
     {
-        public IEnumerable<MembershipType> MembershipTypes { get; set; }
+        public IEnumerable<MembershipTypeDto> MembershipTypes { get; set; }
         public int Id { get; set; }
         [Required(ErrorMessage = "Please enter customer's name")]
         [StringLength(255)]
@@ -34,7 +33,7 @@ namespace LibApp.ViewModels
             Id = 0;
         }
 
-        public CustomerFormViewModel(Customer customer)
+        public CustomerFormViewModel(CustomerDto customer)
         {
             Id = customer.Id;
             Name = customer.Name;

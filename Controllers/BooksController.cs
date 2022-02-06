@@ -7,102 +7,51 @@ using LibApp.Models;
 using LibApp.ViewModels;
 using LibApp.Data;
 using Microsoft.EntityFrameworkCore;
+using LibApp.Controllers.Base;
+using AutoMapper;
+using LibApp.Dtos;
 
 namespace LibApp.Controllers
 {
-    public class BooksController : Controller
+    public class BooksController : BaseController
     {
-        private readonly ApplicationDbContext _context;
+        public BooksController(ApplicationDbContext contex, IMapper mapper) : base(contex, mapper) { }
 
-        public BooksController(ApplicationDbContext contex)
+        public async Task<IActionResult> Index() => View(await this.MakeGetRequest<IEnumerable<BookDto>>($"books"));
+        public async Task<IActionResult> Details(int id) => View(await this.MakeGetRequest<BookDto>($"books/{id}"));
+
+        public async Task<IActionResult> Edit(int id)
         {
-            _context = contex;
-        }
-
-        public IActionResult Index()
-        {
-            var books = _context.Books
-                .Include(b => b.Genre)
-                .ToList();
-
-            return View(books);
-        }
-
-        public IActionResult Details(int id)
-        {
-            var book = _context.Books
-                .Include(b => b.Genre)
-                .SingleOrDefault(b => b.Id == id);
-
-            if (book == null)
-            {
-                return Content("Book not found");
-            }
-
-            return View(book);
-        }
-
-        public IActionResult Edit(int id)
-        {
-            var book = _context.Books.SingleOrDefault(b => b.Id == id);
-            if (book == null)
-            {
-                return NotFound();
-            }
-
+            var book = await this.MakeGetRequest<BookDto>($"books/{id}");
+            if (book == null)return NotFound();
+            
             var viewModel = new BookFormViewModel
             {
                 Book = book,
-                Genres = _context.Genre.ToList()
+                Genres = await this.MakeGetRequest<IEnumerable<GenreDto>>($"books/genres")
             };
 
             return View("BookForm", viewModel);
         }
 
-        public IActionResult New()
+        public async Task<IActionResult> New()
         {
-            var genres = _context.Genre.ToList();
             var viewModel = new BookFormViewModel
             {
-                Genres = genres
+                Genres = await this.MakeGetRequest<IEnumerable<GenreDto>>($"books/genres")
             };
 
             return View("BookForm", viewModel);
         }
 
-
         [HttpPost]
-        [ValidateAntiForgeryToken()]
-        public IActionResult Save(Book book)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Save(Book book)
         {
-            if (book.Id == 0)
-            {
-                 book.DateAdded = DateTime.Now;
-                book.NumberAvailable = book.NumberInStock;
-                _context.Books.Add(book);
-            }
-            else
-            {
-                var bookInDb = _context.Books.SingleOrDefault(b => b.Id == book.Id);
-                bookInDb.Name = book.Name;
-                bookInDb.AuthorName = book.AuthorName;
-                bookInDb.ReleaseDate = book.ReleaseDate;
-                bookInDb.GenreId = book.GenreId;
-                bookInDb.NumberInStock = book.NumberInStock;
-            }
-
-            try
-            {
-                _context.SaveChanges();
-            }
-            catch (DbUpdateException e)
-            {
-                Console.WriteLine(e);
-            }
+            if (book.Id == 0) await this.MakePostRequest<Book>($"books", book);
+            else await this.MakePutRequest<Book>($"books/{book.Id}", book);
 
             return RedirectToAction("Index", "Books");
         }
-
-
     }
 }

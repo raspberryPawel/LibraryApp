@@ -65,6 +65,15 @@ namespace LibApp.Controllers.Api
             return Ok(_mapper.Map<CustomerDto>(customer));
         }
 
+        // GET /api/customers/membershipTypes
+        [HttpGet]
+        [Route("membershipTypes")]
+        public IActionResult GetMembershipTypes()
+        {
+            
+            return Ok(_context.MembershipTypes.ToList().Select(_mapper.Map<MembershipType, MembershipTypeDto>));
+        }
+
         // POST /api/customers/
         [HttpPost]
         public CustomerDto CreateCustomer(CustomerDto customerDto)

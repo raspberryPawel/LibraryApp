@@ -7,41 +7,35 @@ using LibApp.Dtos;
 using System.Threading.Tasks;
 using AutoMapper;
 using LibApp.Controllers.Base;
+using System.Collections.Generic;
 
 namespace LibApp.Controllers
 {
     public class CustomersController : BaseController
     {
-        public CustomersController(ApplicationDbContext contex, IMapper mapper) : base(contex, mapper) {
-        }
+        public CustomersController(ApplicationDbContext contex, IMapper mapper) : base(contex, mapper) {}
 
-        public ViewResult Index()
-        {
-            return View();
-        }
-
+        public ViewResult Index() => View();
         public async Task<IActionResult> Details(int id) => View(await this.MakeGetRequest<CustomerDto>($"customers/{id}"));
 
-        public IActionResult New()
+        public async Task<IActionResult> New()
         {
-            var membershipTypes = _context.MembershipTypes.ToList();
-
             var viewModel = new CustomerFormViewModel()
             {
-                MembershipTypes = membershipTypes
+                MembershipTypes = await this.MakeGetRequest<IEnumerable<MembershipTypeDto>>($"customers/membershipTypes")
             };
 
             return View("CustomerForm", viewModel);
         }
 
-        public IActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            var customer = _context.Customers.SingleOrDefault(c => c.Id == id);
+            var customer = await this.MakeGetRequest<CustomerDto>($"customers/{id}");
             if (customer == null) return NotFound();
 
             var viewModel = new CustomerFormViewModel(customer)
             {
-                MembershipTypes = _context.MembershipTypes.ToList(),
+                MembershipTypes = await this.MakeGetRequest<IEnumerable<MembershipTypeDto>>($"customers/membershipTypes")
             };
 
             return View("CustomerForm", viewModel);
@@ -52,7 +46,7 @@ namespace LibApp.Controllers
         public async Task<IActionResult> Save(Customer customer)
         {
             if (customer.Id == 0) await this.MakePostRequest<Customer>($"customers", customer);
-            else await this.MakePutRequest<CustomerDto>($"customers/{_context.Customers.Single(c => c.Id == customer.Id).Id}", _mapper.Map<CustomerDto>(customer));
+            else await this.MakePutRequest<CustomerDto>($"customers/{customer.Id}", _mapper.Map<CustomerDto>(customer));
 
             return RedirectToAction("Index", "Customers");
         }
