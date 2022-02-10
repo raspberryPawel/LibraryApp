@@ -4,10 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using LibApp.Models;
+using Microsoft.AspNetCore.Identity;
 
 namespace LibApp.Data
 {
-    public class ApplicationDbContext : IdentityDbContext
+    public class ApplicationDbContext : IdentityDbContext<Customer>
     {
         public DbSet<Customer> Customers { get; set; }
         public DbSet<MembershipType> MembershipTypes { get; set; }

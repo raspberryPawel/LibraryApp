@@ -9,7 +9,7 @@ namespace LibApp.ViewModels
     public class CustomerFormViewModel
     {
         public IEnumerable<MembershipTypeDto> MembershipTypes { get; set; }
-        public int Id { get; set; }
+        public string Id { get; set; }
         [Required(ErrorMessage = "Please enter customer's name")]
         [StringLength(255)]
         public string Name { get; set; }
@@ -24,13 +24,13 @@ namespace LibApp.ViewModels
         {
             get
             {
-                return Id != 0 ? "Edit Customer" : "New Customer";
+                return Id != "0" ? "Edit Customer" : "New Customer";
             }
         }
 
         public CustomerFormViewModel()
         {
-            Id = 0;
+            Id = "0";
         }
 
         public CustomerFormViewModel(CustomerDto customer)

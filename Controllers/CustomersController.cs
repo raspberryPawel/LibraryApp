@@ -45,7 +45,7 @@ namespace LibApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Save(Customer customer)
         {
-            if (customer.Id == 0) await this.MakePostRequest<Customer>($"customers", customer);
+            if (customer.Id == "0") await this.MakePostRequest<Customer>($"customers", customer);
             else await this.MakePutRequest<CustomerDto>($"customers/{customer.Id}", _mapper.Map<CustomerDto>(customer));
 
             return RedirectToAction("Index", "Customers");

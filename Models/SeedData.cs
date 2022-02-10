@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using LibApp.Data;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,10 +16,15 @@ namespace LibApp.Models
             using (var context = new ApplicationDbContext(
                 serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
+                UserManager<Customer> userManager = serviceProvider.GetRequiredService<UserManager<Customer>>();
+
+                SeedDBWithRoles(context);
                 SeedDBWithMemberShipTypes(context);
-                SeedDBWithCustomers(context);
                 SeedDBWithGenres(context);
                 SeedDBWithBooks(context);
+                context.SaveChanges();
+                
+                SeedDBWithCustomers(context, userManager);
                 SeedDBWithRentals(context);
 
                 context.SaveChanges();
@@ -66,7 +74,7 @@ namespace LibApp.Models
                 });
         }
 
-        public static void SeedDBWithCustomers(ApplicationDbContext context)
+        public static void SeedDBWithCustomers(ApplicationDbContext context, UserManager<Customer> userManager)
         {
             if (context.Customers.Any())
             {
@@ -74,43 +82,64 @@ namespace LibApp.Models
                 return;
             }
 
-            context.Customers.AddRange(
-                 new Customer
-                 {
-                     Name = "Paweł Malina",
-                     HasNewsletterSubscribed = true,
-                     MembershipTypeId = 3,
-                     Birthdate = new DateTime(1999, 5, 18)
-                 },
-                 new Customer
-                 {
-                     Name = "Halina Malina",
-                     HasNewsletterSubscribed = true,
-                     MembershipTypeId = 1,
-                     Birthdate = new DateTime(1988, 5, 22)
-                 },
-                 new Customer
-                 {
-                     Name = "Malina Jeżyna",
-                     HasNewsletterSubscribed = false,
-                     MembershipTypeId = 2,
-                     Birthdate = new DateTime(2012, 11, 29)
-                 },
-                 new Customer
-                 {
-                     Name = "Anna Malina",
-                     HasNewsletterSubscribed = false,
-                     MembershipTypeId = 1,
-                     Birthdate = new DateTime(2008, 11, 29)
-                 },
-                  new Customer
-                  {
-                      Name = "Malina Halina",
-                      HasNewsletterSubscribed = false,
-                      MembershipTypeId = 4,
-                      Birthdate = new DateTime(2001, 02, 17)
-                  }
-             );
+            PasswordHasher<Customer> passwordHasher = new PasswordHasher<Customer>();
+
+            Customer firstCustomer = new Customer
+            {
+                Name = "Paweł Malina",
+                HasNewsletterSubscribed = true,
+                MembershipTypeId = 3,
+                Birthdate = new DateTime(1999, 5, 18),
+                Email = "pawel.malina@gmail.com",
+                NormalizedEmail = "pawel.malina@gmail.com",
+                PasswordHash = passwordHasher.HashPassword(null, "zaq1@WSX"),
+                UserName = "pawel.malina@gmail.com",
+                NormalizedUserName = "pawel.malina@gmail.com",
+                EmailConfirmed = true,
+                LockoutEnabled = false,
+                SecurityStamp = Guid.NewGuid().ToString(),
+            };
+
+            userManager.CreateAsync(firstCustomer).Wait();
+            userManager.AddToRoleAsync(firstCustomer, "user").Wait();
+
+            Customer secondCustomer = new Customer
+            {
+                Name = "Halina Malina",
+                HasNewsletterSubscribed = true,
+                MembershipTypeId = 1,
+                Birthdate = new DateTime(1988, 5, 22),
+                Email = "halina.malina@gmail.com",
+                NormalizedEmail = "halina.malina@gmail.com",
+                PasswordHash = passwordHasher.HashPassword(null, "zaq1@WSX"),
+                UserName = "halina.malina@gmail.com",
+                NormalizedUserName = "halina.malina@gmail.com",
+                EmailConfirmed = true,
+                LockoutEnabled = false,
+                SecurityStamp = Guid.NewGuid().ToString(),
+            };
+
+            userManager.CreateAsync(secondCustomer).Wait();
+            userManager.AddToRoleAsync(secondCustomer, "storeManager").Wait();
+
+            Customer thirdCustomer = new Customer
+            {
+                Name = "Anna Malina",
+                HasNewsletterSubscribed = false,
+                MembershipTypeId = 1,
+                Birthdate = new DateTime(2008, 11, 29),
+                Email = "anna.malina@gmail.com",
+                NormalizedEmail = "anna.malina@gmail.com",
+                PasswordHash = passwordHasher.HashPassword(null, "zaq1@WSX"),
+                UserName = "anna.malina@gmail.com",
+                NormalizedUserName = "anna.malina@gmail.com",
+                EmailConfirmed = true,
+                LockoutEnabled = false,
+                SecurityStamp = Guid.NewGuid().ToString(),
+            };
+
+            userManager.CreateAsync(thirdCustomer).Wait();
+            userManager.AddToRoleAsync(thirdCustomer, "owner").Wait();
         }
 
 
@@ -175,9 +204,11 @@ namespace LibApp.Models
             Book firstBook = context.Books.Where(x => x.Name == "Pan Tadeusz").FirstOrDefault();
             Book secondBook = context.Books.Where(x => x.Name == "Świętoszek").FirstOrDefault();
 
-            Customer firstCustomer = context.Customers.Where(x => x.Name == "Malina Jeżyna").FirstOrDefault();
+            Customer firstCustomer = context.Customers.Where(x => x.Name == "Halina Malina").FirstOrDefault();
             Customer secondCustomer = context.Customers.Where(x => x.Name == "Paweł Malina").FirstOrDefault();
             Customer thirdCustomer = context.Customers.Where(x => x.Name == "Anna Malina").FirstOrDefault();
+            Console.WriteLine("firstCustomer.Name => ");
+            Console.WriteLine(firstCustomer.Name);
 
             context.Rentals.AddRange(
                 new Rental
@@ -199,6 +230,24 @@ namespace LibApp.Models
                     DateRented = DateTime.Now,
                 }
              );
+        }
+
+        public static void SeedDBWithRoles(ApplicationDbContext context)
+        {
+            if (context.Roles.Any())
+            {
+                Console.WriteLine("Database already seeded with Roles Data");
+                return;
+            }
+
+            var roles = new List<IdentityRole>
+            {
+                new IdentityRole { Name = "User", NormalizedName = "user" },
+                new IdentityRole { Name = "StoreManager", NormalizedName = "storemanager"},
+                new IdentityRole { Name = "Owner", NormalizedName = "owner"}
+            };
+
+            context.Roles.AddRange(roles);
         }
     }
 }

@@ -49,7 +49,7 @@ namespace LibApp.Controllers.Api
 
         // GET /api/customers/{id}
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetCustomer(int id)
+        public async Task<IActionResult> GetCustomer(string id)
         {
             Console.WriteLine("Request beginning");
 
@@ -113,7 +113,7 @@ namespace LibApp.Controllers.Api
 
         // DELETE /api/customers
         [HttpDelete("{id}")]
-        public void DeleteCusomer(int id)
+        public void DeleteCusomer(string id)
         {
             var customerInDb = _context.Customers.SingleOrDefault(c => c.Id == id);
             if (customerInDb == null)

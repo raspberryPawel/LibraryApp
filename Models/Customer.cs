@@ -1,11 +1,11 @@
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace LibApp.Models
 {
-    public class Customer
+    public class Customer : IdentityUser
     {
-        public int Id { get; set; }
         [Required(ErrorMessage = "Please enter customer's name")]
         [StringLength(255)]
         public string Name { get; set; }
@@ -16,6 +16,5 @@ namespace LibApp.Models
         [Display(Name="Date of Birth")]
         [Min18YearsIfMember]
         public DateTime? Birthdate { get; set; }
-        
     }
 }
