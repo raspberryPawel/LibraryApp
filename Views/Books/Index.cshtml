@@ -1,22 +1,26 @@
 @model IEnumerable<LibApp.Dtos.BookDto>
 
-@{
-    ViewBag.Title = "Books";
-    Layout = "~/Views/Shared/_Layout.cshtml";
-}
+@{ ViewBag.Title = "Books";
+                Layout = "~/Views/Shared/_Layout.cshtml"; }
 
 <h2>Books</h2>
 
-<p>
-    <a class="btn btn-primary" asp-action="New">New Book</a>
-</p>
+@if (this.User.IsInRole("Owner") || this.User.IsInRole("StoreManager"))
+{
+    <p>
+        <a class="btn btn-primary" asp-action="New">New Book</a>
+    </p>
+}
 
 <table id="books" class="table table-bordered table-hover">
     <thead>
         <tr>
             <th>Book</th>
             <th>Genre</th>
-            <th>Delete</th>
+            @if (this.User.IsInRole("Owner") || this.User.IsInRole("StoreManager"))
+            {
+                <th class="delete_column">Delete</th>
+            }
         </tr>
     </thead>
     <tbody>
@@ -28,37 +32,42 @@
 {
     <script>
         $(document).ready(function () {
-        $("#books").DataTable({
+            const columns = [
+                {
+                    data: "name",
+                    render: function (data, type, book) {
+                        return "<a href='books/details/" + book.id + "'>" + book.name + "</a>";
+                    }
+                },
+                {
+                    data: "genre.name",
+                }
+            ];
+
+            if ($(".delete_column").length) {
+                columns.push({
+                    data: "id",
+                    render: function (data) {
+                        return "<button class='btn btn-secondary js-delete' data-book-id=" + data + ">Delete</button>";
+                    }
+                })
+            }
+
+            $("#books").DataTable({
                 ajax: {
                     url: "api/books",
                     dataSrc: ""
                 },
-                columns: [
-                    {
-                        data: "name",
-                        render: function (data, type, book) {
-                            return "<a href='books/details/" + book.id + "'>" + book.name + "</a>";
-                        }
-                    },
-                    {
-                        data: "genre.name",
-                    },
-                    {
-                        data: "id",
-                        render: function (data) {
-                            return "<button class='btn btn-secondary js-delete' data-book-id=" + data + ">Delete</button>";
-                        }
-                    }
-                ]
+                columns: columns
             });
-    });
+        });
     </script>
 
     <script>
-    $(document).ready(function () {
+        $(document).ready(function () {
             var table = $("#books").DataTable();
 
-        $("#books").on("click", ".js-delete", function () {
+            $("#books").on("click", ".js-delete", function () {
                 var button = $(this);
                 bootbox.confirm({
                     message: "Confirm book deletion?",

@@ -1,9 +1,7 @@
 ﻿@model LibApp.Dtos.BookDto
 
-@{
-    ViewBag.Title = Model.Name;
-    Layout = "~/Views/Shared/_Layout.cshtml";
-}
+@{ ViewBag.Title = Model.Name;
+    Layout = "~/Views/Shared/_Layout.cshtml"; }
 
 <h2>@Model.Name</h2>
 <ul>
@@ -14,6 +12,7 @@
     <li>Numbers in Stock: @Model.NumberInStock</li>
 </ul>
 
-@if (User.Identity.IsAuthenticated) {
+@if (User.Identity.IsAuthenticated && (this.User.IsInRole("Owner") || this.User.IsInRole("StoreManager")))
+{
     <a class="btn btn-primary" href="/books/edit/@Model.Id">Edit book: @Model.Name</a>
 }

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using LibApp.Controllers.Base;
 using System.Collections.Generic;
+using System;
 
 namespace LibApp.Controllers
 {
@@ -16,7 +17,7 @@ namespace LibApp.Controllers
         public CustomersController(ApplicationDbContext contex, IMapper mapper) : base(contex, mapper) {}
 
         public ViewResult Index() => View();
-        public async Task<IActionResult> Details(int id) => View(await this.MakeGetRequest<CustomerDto>($"customers/{id}"));
+        public async Task<IActionResult> Details(string id) => View(await this.MakeGetRequest<CustomerDto>($"customers/{id}"));
 
         public async Task<IActionResult> New()
         {

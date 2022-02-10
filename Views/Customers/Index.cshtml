@@ -5,49 +5,70 @@
 
 <h2>Customers</h2>
 
-<p>
-    <a class="btn btn-primary" asp-action="New">New Customer</a>
-</p>
+@if (this.User.IsInRole("Owner"))
+{
+    <p>
+        <a class="btn btn-primary" asp-action="New">New Customer</a>
+    </p>
+}
 
 <table id="customers" class="table table-hover">
     <thead>
-    <tr>
-        <th>Customer</th>
-        <th>Membership Type</th>
-        <th>Delete</th>
-    </tr>
+        <tr>
+            <th>Customer</th>
+            <th>Membership Type</th>
+            <th>Email</th>
+            <th>Birthday</th>
+            @if (this.User.IsInRole("Owner"))
+             {
+                <th class="delete_column">Delete</th>           
+             }
+        </tr>
     </thead>
     <tbody>
     </tbody>
 </table>
 
 
-@section Scripts  
+@section Scripts
 {
     <script>
         $(document).ready(function () {
+            const columns = [
+                {
+                    data: "name",
+                    render: function (data, type, customer) {
+                        console.log(customer.id)
+                        return "<a href='customers/details/" + customer.id + "'>" + customer.name + "</a>";
+                    }
+                },
+                {
+                    data: "membershipType.name"
+                },
+                {
+                    data: "email"
+                },
+                {
+                    data: "birthdate"
+                },
+
+            ];
+
+            if ($(".delete_column").length) {
+                columns.push({
+                    data: "id",
+                    render: function (data) {
+                        return "<button class='btn btn-secondary js-delete' data-customer-id=" + data + ">Delete</button>";
+                    }
+                })
+            }
+
             $("#customers").DataTable({
                 ajax: {
                     url: "api/customers",
                     dataSrc: ""
                 },
-                columns: [
-                    {
-                        data: "name",
-                        render: function (data, type, customer) {
-                            return "<a href='customers/details/" + customer.id + "'>" + customer.name + "</a>";
-                        }
-                    },
-                    {
-                        data: "membershipType.name"
-                    },
-                    {
-                        data: "id",
-                        render: function (data) {
-                            return "<button class='btn btn-secondary js-delete' data-customer-id=" + data + ">Delete</button>";
-                        }
-                    }
-                ]
+                columns: columns
             });
         });
     </script>
