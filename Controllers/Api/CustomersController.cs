@@ -3,6 +3,7 @@ using LibApp.Data;
 using LibApp.Dtos;
 using LibApp.Models;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -22,10 +23,17 @@ namespace LibApp.Controllers.Api
     [ApiController]
     public class CustomersController : ControllerBase
     {
-        public CustomersController(ApplicationDbContext context, IMapper mapper)
+
+        protected UserManager<Customer> userManager;
+        PasswordHasher<Customer> passwordHasher;
+
+        public CustomersController(ApplicationDbContext context, IMapper mapper, UserManager<Customer> userManager)
         {
             _context = context;
             _mapper = mapper;
+
+            this.userManager = userManager;
+            this.passwordHasher = new PasswordHasher<Customer>();
         }
 
         // GET /api/customers
@@ -76,39 +84,64 @@ namespace LibApp.Controllers.Api
 
         // POST /api/customers/
         [HttpPost]
-        public CustomerDto CreateCustomer(CustomerDto customerDto)
+        public async Task<CustomerDto> CreateCustomer(CustomerDto customerDto)
         {
             if (!ModelState.IsValid)
             {
                 throw new HttpResponseException(System.Net.HttpStatusCode.BadRequest);
             }
 
-            var customer = _mapper.Map<Customer>(customerDto);
-            _context.Customers.Add(customer);
-            _context.SaveChanges();
-            customerDto.Id = customer.Id;
+            var newCustomer = new Customer()
+            {
+                Name = customerDto.Name,
+                HasNewsletterSubscribed = customerDto.HasNewsletterSubscribed,
+                MembershipTypeId = customerDto.MembershipTypeId,
+                Birthdate = customerDto.Birthdate,
+                Email = customerDto.Email,
+                NormalizedEmail = (customerDto.Email).Normalize(),
+                PasswordHash = this.passwordHasher.HashPassword(null, customerDto.Password),
+                UserName = customerDto.Email.Normalize(),
+                NormalizedUserName = customerDto.Email.Normalize(),
+                EmailConfirmed = true,
+                LockoutEnabled = false,
+                SecurityStamp = Guid.NewGuid().ToString(),
+            };
+
+            try
+            {
+                await this.userManager.CreateAsync(newCustomer);
+                await this.userManager.AddToRoleAsync(newCustomer, "user");
+            }
+            catch (Exception e) {
+                Console.WriteLine(e);
+            }
 
             return customerDto;
         }
 
         // PUT api/customers/{id}
         [HttpPut("{id}")]
-        public void UpdateCustomer(int id, CustomerDto customerDto)
+        public async Task UpdateCustomer(string id, CustomerDto customerDto)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                throw new HttpResponseException(System.Net.HttpStatusCode.BadRequest);
+                if (!ModelState.IsValid)
+                {
+                    throw new HttpResponseException(System.Net.HttpStatusCode.BadRequest);
+                }
+
+                var customer = await this.userManager.FindByIdAsync(id);
+                if (customer == null)
+                {
+                    throw new HttpResponseException(System.Net.HttpStatusCode.NotFound);
+                }
+
+                _mapper.Map(customerDto, customer);
+                await this.userManager.UpdateAsync(customer);
             }
-
-            var customerInDb = _context.Customers.SingleOrDefault(c => c.Id == customerDto.Id);
-            if (customerInDb == null)
-            {
-                throw new HttpResponseException(System.Net.HttpStatusCode.NotFound);
+            catch (Exception e) {
+                Console.WriteLine(e);
             }
-
-
-            _mapper.Map(customerDto, customerInDb);
-            _context.SaveChanges();
         }
 
         // DELETE /api/customers

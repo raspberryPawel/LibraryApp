@@ -9,12 +9,20 @@ using AutoMapper;
 using LibApp.Controllers.Base;
 using System.Collections.Generic;
 using System;
+using Microsoft.AspNetCore.Identity;
 
 namespace LibApp.Controllers
 {
     public class CustomersController : BaseController
     {
-        public CustomersController(ApplicationDbContext contex, IMapper mapper) : base(contex, mapper) {}
+
+        protected UserManager<Customer> userManager;
+        PasswordHasher<Customer> passwordHasher;
+
+        public CustomersController(ApplicationDbContext contex, IMapper mapper, UserManager<Customer> userManager) : base(contex, mapper) {
+            this.userManager = userManager;
+            this.passwordHasher = new PasswordHasher<Customer>();
+        }
 
         public ViewResult Index() => View();
         public async Task<IActionResult> Details(string id) => View(await this.MakeGetRequest<CustomerDto>($"customers/{id}"));
@@ -29,7 +37,7 @@ namespace LibApp.Controllers
             return View("CustomerForm", viewModel);
         }
 
-        public async Task<IActionResult> Edit(int id)
+        public async Task<IActionResult> Edit(string id)
         {
             var customer = await this.MakeGetRequest<CustomerDto>($"customers/{id}");
             if (customer == null) return NotFound();
@@ -44,9 +52,9 @@ namespace LibApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Save(Customer customer)
+        public async Task<IActionResult> Save(CustomerDto customer)
         {
-            if (customer.Id == "0") await this.MakePostRequest<Customer>($"customers", customer);
+            if (customer.Id == "0") await this.MakePostRequest<CustomerDto>($"customers", customer);
             else await this.MakePutRequest<CustomerDto>($"customers/{customer.Id}", _mapper.Map<CustomerDto>(customer));
 
             return RedirectToAction("Index", "Customers");
