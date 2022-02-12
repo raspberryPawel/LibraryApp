@@ -18,8 +18,8 @@ namespace LibApp.Controllers
 {
     public class AuthController : BaseController {
         protected UserManager<Customer> userManager;
-        PasswordHasher<Customer> passwordHasher;
-        public AuthController(ApplicationDbContext contex, IMapper mapper, UserManager<Customer> userManager) : base(contex, mapper) {
+        protected PasswordHasher<Customer> passwordHasher;
+        public AuthController(IMapper mapper, UserManager<Customer> userManager) : base(mapper) {
              this.userManager = userManager;
              this.passwordHasher = new PasswordHasher<Customer>();
         }

@@ -12,12 +12,10 @@ namespace LibApp.Controllers.Base
     public class BaseController : Controller
     {
 
-        protected readonly ApplicationDbContext _context;
         protected readonly IMapper _mapper;
 
-        public BaseController(ApplicationDbContext contex, IMapper mapper)
+        public BaseController(IMapper mapper)
         {
-            _context = contex;
             _mapper = mapper;
         }
 

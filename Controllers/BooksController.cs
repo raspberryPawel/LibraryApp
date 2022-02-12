@@ -15,7 +15,7 @@ namespace LibApp.Controllers
 {
     public class BooksController : BaseController
     {
-        public BooksController(ApplicationDbContext contex, IMapper mapper) : base(contex, mapper) { }
+        public BooksController(IMapper mapper) : base(mapper) { }
 
         public async Task<IActionResult> Index() => View(await this.MakeGetRequest<IEnumerable<BookDto>>($"books"));
         public async Task<IActionResult> Details(int id) => View(await this.MakeGetRequest<BookDto>($"books/{id}"));

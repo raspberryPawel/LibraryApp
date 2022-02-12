@@ -17,11 +17,9 @@ namespace LibApp.Controllers
     {
 
         protected UserManager<Customer> userManager;
-        PasswordHasher<Customer> passwordHasher;
 
-        public CustomersController(ApplicationDbContext contex, IMapper mapper, UserManager<Customer> userManager) : base(contex, mapper) {
+        public CustomersController(IMapper mapper, UserManager<Customer> userManager) : base(mapper) {
             this.userManager = userManager;
-            this.passwordHasher = new PasswordHasher<Customer>();
         }
 
         public ViewResult Index() => View();
