@@ -27,7 +27,7 @@ namespace LibApp.Controllers
             
             var viewModel = new BookFormViewModel
             {
-                Book = book,
+                Book = _mapper.Map<Book>(book),
                 Genres = await this.MakeGetRequest<IEnumerable<GenreDto>>($"books/genres")
             };
 

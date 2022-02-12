@@ -2,6 +2,7 @@
 using LibApp.Data;
 using LibApp.Dtos;
 using LibApp.Models;
+using LibApp.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -20,24 +21,23 @@ namespace LibApp.Controllers.Api
     [ApiController]
     public class BooksController : ControllerBase
     {
-        public BooksController(ApplicationDbContext context, IMapper mapper)
+        protected IBookRepository repository;
+        protected IGenreRepository genreRepository;
+        public BooksController(IMapper mapper, IBookRepository bookRepository, IGenreRepository genreRepository)
         {
-            _context = context;
-            _mapper = mapper;
+            this._mapper = mapper;
+            this.repository = bookRepository;
+            this.genreRepository = genreRepository;
         }
 
         // GET /api/books
         [HttpGet]
         public IActionResult GetBooks(string query = null) 
         {
-            var booksQuery = _context.Books
-                .Include(b => b.Genre)
-                .Where(b => b.NumberAvailable > 0);
+            var booksQuery = repository.GetAll().Where(b => b.NumberAvailable > 0);
 
             if (!String.IsNullOrWhiteSpace(query))
-            {
                 booksQuery = booksQuery.Where(b => b.Name.Contains(query));
-            }
 
             var booksDtos = booksQuery
             .ToList()
@@ -51,14 +51,14 @@ namespace LibApp.Controllers.Api
         [Route("genres")]
         public IActionResult GetGenres()
         {
-            return Ok(_context.Genre.ToList().Select(_mapper.Map<Genre, GenreDto>));
+            return Ok(genreRepository.GetAll().Select(_mapper.Map<Genre, GenreDto>));
         }
 
         // GET /api/books/{id}
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetBook(int id)
+        public IActionResult GetBook(int id)
         {
-            var book = await _context.Books.Include(c => c.Genre).SingleOrDefaultAsync(c => c.Id == id);
+            var book = repository.GetById(id);
             if (book == null) throw new HttpResponseException(System.Net.HttpStatusCode.NotFound);
 
             return Ok(_mapper.Map<BookDto>(book));
@@ -74,10 +74,10 @@ namespace LibApp.Controllers.Api
             var book = _mapper.Map<Book>(bookDto);
             book.NumberAvailable = book.NumberInStock;
 
-            _context.Books.Add(book);
-            _context.SaveChanges();
+            repository.Add(book);
+            repository.Save();
+            
             bookDto.Id = book.Id;
-
             return bookDto;
         }
 
@@ -88,30 +88,27 @@ namespace LibApp.Controllers.Api
             if (!ModelState.IsValid)
                 throw new HttpResponseException(System.Net.HttpStatusCode.BadRequest);
 
-            var bookInDb = _context.Books.SingleOrDefault(c => c.Id == id);
-            if (bookInDb == null)
+            if (repository.GetById(id) == null)
                 throw new HttpResponseException(System.Net.HttpStatusCode.NotFound);
 
-
-            _mapper.Map(bookDto, bookInDb);
-            _context.SaveChanges();
+            repository.Update(bookDto);
+            repository.Save();
         }
 
         // DELETE /api/books
         [HttpDelete("{id}")]
         public void DeleteBook(int id)
         {
-            var bookInDb = _context.Books.SingleOrDefault(c => c.Id == id);
+            var bookInDb = repository.GetById(id);
             if (bookInDb == null)
             {
                 throw new HttpResponseException(System.Net.HttpStatusCode.NotFound);
             }
 
-            _context.Books.Remove(bookInDb);
-            _context.SaveChanges();
+            repository.Delete(bookInDb.Id);
+            repository.Save();
         }
 
-        private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
     }
 }
