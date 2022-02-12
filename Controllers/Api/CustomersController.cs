@@ -2,6 +2,7 @@
 using LibApp.Data;
 using LibApp.Dtos;
 using LibApp.Models;
+using LibApp.Repositories.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -25,28 +26,28 @@ namespace LibApp.Controllers.Api
     {
 
         protected UserManager<Customer> userManager;
-        PasswordHasher<Customer> passwordHasher;
+        protected PasswordHasher<Customer> passwordHasher;
+        protected ICustomerRepository customerRepository;
+        protected IMembershipTypeRepository membershipTypeRepository;
 
-        public CustomersController(ApplicationDbContext context, IMapper mapper, UserManager<Customer> userManager)
+        public CustomersController(IMapper mapper, UserManager<Customer> userManager, ICustomerRepository customerRepository, IMembershipTypeRepository membershipTypeRepository)
         {
-            _context = context;
             _mapper = mapper;
 
             this.userManager = userManager;
             this.passwordHasher = new PasswordHasher<Customer>();
+            this.customerRepository = customerRepository;
+            this.membershipTypeRepository = membershipTypeRepository;
         }
 
         // GET /api/customers
         [HttpGet]
         public IActionResult GetCustomers(string query = null)
         {
-            IEnumerable<Customer> customersQuery = _context.Customers
-                .Include(c => c.MembershipType);
+            IEnumerable<Customer> customersQuery = customerRepository.GetAll();
 
             if (!String.IsNullOrWhiteSpace(query))
-            {
                 customersQuery = customersQuery.Where(c => c.Name.Contains(query));
-            }
 
             var customerDtos = customersQuery
                 .ToList()
@@ -57,16 +58,13 @@ namespace LibApp.Controllers.Api
 
         // GET /api/customers/{id}
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetCustomer(string id)
+        public IActionResult GetCustomer(string id)
         {
             Console.WriteLine("Request beginning");
 
-            var customer = await _context.Customers.Include(c => c.MembershipType).SingleOrDefaultAsync(c => c.Id == id);
-            //await Task.Delay(2000);
+            var customer = customerRepository.GetById(id);
             if (customer == null)
-            {
                 throw new HttpResponseException(System.Net.HttpStatusCode.NotFound);
-            }
 
             Console.WriteLine("Request end");
 
@@ -79,7 +77,7 @@ namespace LibApp.Controllers.Api
         public IActionResult GetMembershipTypes()
         {
             
-            return Ok(_context.MembershipTypes.ToList().Select(_mapper.Map<MembershipType, MembershipTypeDto>));
+            return Ok(membershipTypeRepository.GetAll().Select(_mapper.Map<MembershipType, MembershipTypeDto>));
         }
 
         // POST /api/customers/
@@ -148,17 +146,15 @@ namespace LibApp.Controllers.Api
         [HttpDelete("{id}")]
         public void DeleteCusomer(string id)
         {
-            var customerInDb = _context.Customers.SingleOrDefault(c => c.Id == id);
-            if (customerInDb == null)
+            if (customerRepository.GetById(id) == null)
             {
                 throw new HttpResponseException(System.Net.HttpStatusCode.NotFound);
             }
 
-            _context.Customers.Remove(customerInDb);
-            _context.SaveChanges();
+            customerRepository.Delete(id);
+            customerRepository.Save();
         }
 
-        private ApplicationDbContext _context;
         private readonly IMapper _mapper;
     }
 }
